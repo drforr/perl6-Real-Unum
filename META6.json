@@ -1,0 +1,19 @@
+{
+  "authors" : [
+    "Jeffrey Goff"
+  ],
+  "build-depends" : [ ],
+  "depends" : [ ],
+  "description" : "Implementation of Posits from posithub.org",
+  "license" : "Artistic-2.0",
+  "name" : "Real::Unum",
+  "perl" : "6.c",
+  "provides" : {
+    "Real::Posit" : "lib/Real/Unum.pm6"
+  },
+  "resources" : [ ],
+  "source-url" : "",
+  "tags" : [ ],
+  "test-depends" : [ ],
+  "version" : "0.0.1"
+}
