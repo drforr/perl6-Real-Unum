@@ -19,6 +19,16 @@ subtest 'environment', {
   is $env.qextra, 32;
 };
 
+# Called positQ in the doc.
+#
+subtest 'is-valid-posit', {
+  ok $env.is-valid-posit( 0 );
+  ok $env.is-valid-posit( 1 );
+  ok $env.is-valid-posit( 63 );
+  ok $env.is-valid-posit( 64 );
+  ok !$env.is-valid-posit( 65 );
+}
+
 # Sign is always the first bit.
 #
 subtest 'sign', {
@@ -27,7 +37,7 @@ subtest 'sign', {
 	is $env.parts( 0b1_00001 )<sign>, 1;
 };
 
-# XXX for the moment worrying only about positive values.
+# XXX There's a worrying break there...
 # XXX
 subtest 'regime', {
 	is $env.parts( 0b000000  )<regime>, '00000';
@@ -35,6 +45,11 @@ subtest 'regime', {
 	is $env.parts( 0b0000_11 )<regime>, '000';
 	is $env.parts( 0b000_101 )<regime>, '00';
 	is $env.parts( 0b00_1001 )<regime>, '0';
+	is $env.parts( 0b111111  )<regime>, '0000';
+	is $env.parts( 0b11111_0 )<regime>, '000';
+	is $env.parts( 0b1111_01 )<regime>, '000';
+	is $env.parts( 0b111_001 )<regime>, '00';
+	is $env.parts( 0b11_0001 )<regime>, '0';
 };
 
 subtest 'exponent', {
@@ -123,7 +138,6 @@ subtest 'x value', {
 subtest 'display value', {
 	my $env = Real::Unum::Environment.new( :nbits( 6 ), :es( 2 ) );
 
-#`{
 	is-deeply $env.for-display( 0b100_000 ), '-00000';
 	is-deeply $env.for-display( 0b100_001 ), '-11111';
 	is-deeply $env.for-display( 0b100_010 ), '-11110';
@@ -156,7 +170,6 @@ subtest 'display value', {
 	is-deeply $env.for-display( 0b111_101 ), '-00011';
 	is-deeply $env.for-display( 0b111_110 ), '-00010';
 	is-deeply $env.for-display( 0b111_111 ), '-00001';
-}
 
 	is-deeply $env.for-display( 0b000_000 ), '+00000';
 	is-deeply $env.for-display( 0b000_001 ), '+00001';
@@ -191,68 +204,5 @@ subtest 'display value', {
 	is-deeply $env.for-display( 0b011_110 ), '+11110';
 	is-deeply $env.for-display( 0b011_111 ), '+11111';
 };
-
-#`{
-
-# For the moment do things this way...
-#
-my $uenv = PositEnvironment.new( :nbits(6), :es(1) );
-
-subtest 'positQ', {
-  ok $uenv.positQ( 0 );
-  ok $uenv.positQ( 1 );
-  ok $uenv.positQ( 63 );
-  ok $uenv.positQ( 64 );
-  ok !$uenv.positQ( 65 );
-};
-
-# Mathematica method
-subtest '_IntegerDigits', {
-#	is-deeply $uenv._IntegerDigits( 13 ), ( 1, 3 );
-	is-deeply $uenv._IntegerDigits( 5, 2, 6 ), ( 0, 0, 0, 1, 0, 1 );
-};
-
-subtest 'twoscomp', {
-	is $uenv.twoscomp( 1, 1 ), 1;
-	is $uenv.twoscomp( 0, 1 ), $uenv.npat - 1;
-#	is $uenv.twoscomp( 1, 0b100001 ), 0b011111;
-	is $uenv.twoscomp( 1, ($uenv.npat/2).Int ), $uenv.npat/2;
-};
-
-# Note that $uenv.npat is even, should it be expanding to Rat?
-#
-subtest 'signbit', {
-	is $uenv.signbit( 1 ), 0;
-	is $uenv.signbit( ($uenv.npat/2).Int-1 ), 0;
-	is $uenv.signbit( $uenv.npat-1 ), 1;
-	dies-ok { $uenv.signbit( $uenv.npat ) };
-};
-
-subtest 'regimebits', {
-	is-deeply $uenv.regimebits( 0b000011 ), [ 0, 0, 0 ];
-	is-deeply $uenv.regimebits( 0b100001 ), [ 1, 1, 1, 1, 1 ];
-};
-
-subtest 'regimevalue', {
-	is-deeply $uenv.regimevalue( [ 0, 0, 0 ] ),      -3;
-	is-deeply $uenv.regimevalue( [ 1, 1, 1, 1, 1 ] ), 4;
-};
-
-subtest 'exponentbits', {
-	ok 1; # There's no explicit test in the PDF that I can see.
-};
-
-subtest 'fractionbits', {
-	ok 1; # There's no explicit test in the PDF that I can see.
-};
-
-warn $uenv.display( 63 );
-
-subtest 'table', {
-	my $uenv = PositEnvironment.new( :nbits(6), :es(2) );
-	ok 1;
-};
-
-}
 
 done-testing;

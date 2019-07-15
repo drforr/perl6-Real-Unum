@@ -29,35 +29,38 @@ class Real::Unum::Environment {
 	has $.qsize  = 2**ceiling( log( ($!nbits-2)*(2**($!es+2))+5 , 2 ) );
 	has $.qextra = $!qsize - ($!nbits-2)*2**($!es+2);
 
+	# Same as positQ in the PDF.
+	#
+	method is-valid-posit( Int $p ) returns Bool {
+		0 <= $p <= $.npat;
+	}
+
 #`{
 
 	In principle, the Mathematica description of the way Posit internals
 	work is wonderful. In practice, it's simpler to do good old-fashioned
 	string manipulation.
 
-	Internally a posit is broken up like this (for a 6-bit integer):
+	Internally a posit is broken up like this 
+	(6-bit, 2-exponent environment):
 
-	[0] [11111] # Sign bit and 5 regime bits
-	[0] [11110] # Sign bit and 4 regime bits
-	[0] [111] [0] [0] # Sign bit, 3 regime bits, pad, and 1 exponent bit
+	001000 => sign[0] regime[0][1] exponent[00] fraction[0]
 
+	The sign is the MSB.
+	The regime is the longest run of bits that match the sign bit.
+	(The regime may conceivably be the entire bit-string, see 0_00000
+	 and 1_11111 - in that case, there's nothing left to interpret.)
+	The exponent is the next <es> bits, if they exist. No padding.
+	The fraction is the remainder, if it exists.
 
-	The MSB of a Posit is its sign bit.
-	The regime bits of a Posit are all of the bits that are the same value
-	after the sign bit.
-
-	* The document originally seems to state that it's the number of bits
-	  after the sign that have the opposite value to the sign bit, but
-	  when you get to page 15 this is clearly untrue, as '000000' has a
-	  zero sign bit, and the regime bits are all 0s.
+	There are probably many, many simpler ways to do what I'm doing here.
+	I'll probably do more compact bit-shifting, maybe even adding a small
+	C library later on.
 }
-
-	method twoscomp( Int $sign, Int $p ) {
-		( $sign > 0 ?? $p !! $.npat - $p ) mod $.npat;
-	}
 
 	# Return $p as a (maybe left-padded) array of bits
 	method padded-array( Int $p ) {
+		die "Got invalid posit $p" unless self.is-valid-posit( $p );
 		my Str $base-two = $p.base(2);
 		my Str $padding = '0' x ( $.nbits - $base-two.chars );
 		$base-two = $padding ~ $base-two;
@@ -65,13 +68,31 @@ class Real::Unum::Environment {
 		map { +$_ }, $base-two.split( '', :skip-empty );
 	}
 
+	method twos-complement( @bits ) {
+		my @comp = map { 1 - $_ }, @bits;
+		@comp[*-1]++;
+		for 1 .. @comp.elems -> $index {
+			next unless @comp[*-$index] > 1;
+
+			@comp[*-$index-1]++ if $index+1 <= @comp.elems;
+			@comp[*-$index] = 0;
+		}
+		@comp;
+	}
+
 	# Break the posit into its component parts. There will always be
 	# a sign and regime bit, the other parts may not exist.
 	#
+	# Note that for negative numbers we take the 2s complement after
+	# stripping the sign bit.
+	#
 	method parts( Int $p ) {
+		die "Got invalid posit $p" unless self.is-valid-posit( $p );
 		my %parts;
 		my @binary = self.padded-array( $p );
 		%parts<sign> = @binary.shift;
+		@binary = self.twos-complement( @binary ) if
+			%parts<sign> > 0;
 
 		%parts<regime> = ~@binary.shift;
 		my $regime-bit = %parts<regime>;
@@ -95,9 +116,30 @@ class Real::Unum::Environment {
 	}
 
 	method p2x( Int $p ) {
+		die "Got invalid posit $p" unless self.is-valid-posit( $p );
+		given $p {
+			when 0 { return 0 }
+			when -Int($.npat/2) { return Inf }
+			default {
+				my ( $s, $k, $e, $f );
+				my %parts = self.parts( $p );
+				$s = %parts<sign>;
+				$k = self.regimevalue( %parts<regime> );
+				$e = %parts<exponent> ?? +(%parts<exponent>).base(10) !! 1;
+				$f = %parts<fraction> ?? +(%parts<fraction>).base(10) !! 1;
+
+				return (-1)**$s * $.useed**$k * 2**$e * $f;
+			}
+		}
+	}
+
+	method regimevalue( $regimebits ) {
+		$regimebits ~~ m{ ^ 0 } ?? -$regimebits.chars
+					!! $regimebits.chars - 1;
 	}
 
 	method for-display( Int $p ) returns Str {
+		die "Got invalid posit $p" unless self.is-valid-posit( $p );
 		my %parts = self.parts( $p );
 		my $binary = %parts<sign> == 0 ?? '+' !! '-';
 		$binary ~= %parts<regime> if %parts<regime>;
@@ -114,10 +156,6 @@ class Real::Unum::Environment {
 
 #`{
 
-	method positQ( Int $p ) returns Bool {
-		0 <= $p <= $.npat;
-	}
-
 	method _IntegerDigits( Int $p, Int $base where * >= 2 = 10, Int $maxlen? where * > 0 ) {
 		my $p-base = $p.base($base);
 		die "Out of range" if $maxlen and $p-base.chars > $maxlen;
@@ -126,10 +164,6 @@ class Real::Unum::Environment {
 			$p-base = ('0' x ( $maxlen - $p-base.chars )) ~ $p-base;
 		}
 		return map { +$_ }, $p-base.split('', :skip-empty);
-	}
-
-	method twoscomp( Int $sign, Int $p ) {
-		( $sign > 0 ?? $p !! $.npat - $p ) mod $.npat;
 	}
 
 	my subset Bit of Int where -1 < * < 2;
@@ -233,11 +267,21 @@ Real::Unum - Posit implementation in Perl 6 from https://posithub.org/docs/Posit
 
 use Real::Unum;
 
+my $env = Real::Unum::Environment.new( :nbits( 6 ), :es( 2 ) );
+
+my $pa = $env.new-from-float( 1/8 );
+my $pb = $env.new-from-float( 1/16 );
+is $pa+$pb, 3/16;
+
 =end code
 
 =head1 DESCRIPTION
 
-Real::Unum is ...
+Real::Unum is an implementation of an alternate floating-point numeric system described at L<https://posithub.org/docs/Posits4.pdf|PositHub.org>. The creator claims all the advantages of floats with fewer downsides.
+
+It's a variable-width system that can accommodate any number of bits, and any number of exponent bits, within reason. Eventually there will be subclasses around uint{8,16,32,64} and so on to do regular math with those. Floating-point math within this system is supposedly less prone to rounding errors, and can all be done in less space than a typical IEEE float.
+
+Please don't confuse this implementation with anything resembling a tuned numeric system. It mostly exists due to the fact that a posting caught my eye.
 
 =head1 AUTHOR
 
