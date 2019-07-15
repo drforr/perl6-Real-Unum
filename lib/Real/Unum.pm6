@@ -119,14 +119,16 @@ class Real::Unum::Environment {
 		die "Got invalid posit $p" unless self.is-valid-posit( $p );
 		given $p {
 			when 0 { return 0 }
-			when -Int($.npat/2) { return Inf }
+			#when -Int($.npat/2) { return Inf }
+			when Int($.npat/2) { return Inf } # XXX
 			default {
 				my ( $s, $k, $e, $f );
 				my %parts = self.parts( $p );
 				$s = %parts<sign>;
 				$k = self.regimevalue( %parts<regime> );
-				$e = %parts<exponent> ?? %parts<exponent>.parse-base(10) !! 1;
+				$e = %parts<exponent> ?? %parts<exponent>.parse-base(10) !! 0;
 				$f = %parts<fraction> ?? +(%parts<fraction>).parse-base(10) !! 1;
+#warn "p[$p] s[$s] regimebits[{%parts<regime>}] k[$k] e[$e] f[$f]\n";
 
 				return (-1)**$s * $.useed**$k * 2**$e * $f;
 			}
