@@ -125,10 +125,147 @@ class Real::Unum::Environment {
 				my %parts = self.parts( $p );
 				$s = %parts<sign>;
 				$k = self.regimevalue( %parts<regime> );
-				$e = %parts<exponent> ?? +(%parts<exponent>).base(10) !! 1;
-				$f = %parts<fraction> ?? +(%parts<fraction>).base(10) !! 1;
+				$e = %parts<exponent> ?? %parts<exponent>.parse-base(10) !! 1;
+				$f = %parts<fraction> ?? +(%parts<fraction>).parse-base(10) !! 1;
 
 				return (-1)**$s * $.useed**$k * 2**$e * $f;
+			}
+		}
+	}
+
+#`{
+
+x2p[x_/; positableQ[x]] :=
+   Module[{i, p, e = 2**(es-1), y = Abs[x]},
+          Which[ # First, take care of the two exception values:
+                 y == 0,   0 # all 0 bits
+               , y == Inf, BitShiftLeft[1, nbits-1] # 1 followed by all 0s
+               , True, If[ y >= 1 # Northeast quadrant
+                         , p = 1;
+                           i = 2; # Shift in 1s from the right and scale down
+                           While[ y >= useed && i < nbits
+                                , {p, y, i} = {2*p+1, y/useed, i+1}
+                                ];
+                           p = 2*p; i++
+                         , # Else, southeast quadrant
+                           p = 0;
+                           i = 1; # Shift in 0s from the right and scale up
+                           While[ y < 1 && i <= nbits
+                                , {y, i} = {y*useed, i+1}
+                                ];
+                           If[ i >= nbits
+                             , p = 2;
+                               i = nbits + 1
+                             , p = 1;
+                               i++
+                             ]
+                         ];
+                       # Extract exponent bits
+                       While[ e > 1/2 && i <= nbits
+                            , p=2*p;
+                              If[ y >= 2**e
+                                , y /= 2**e;
+                                  p++
+                                ];
+                              e /= 2;
+                              i++
+                            ];
+                       y--; # Fraction bits; subtract the hidden bit
+                       While[ y > 0 && i <= nbits
+                            , y = 2*y;
+                              p = 2*p+floor(y);
+                              y -= floor(y);
+                              i++
+                            ];
+                       p *= 2**(nbits+1-i);
+                       i++;
+                       # round to nearest; tie goes to even
+                       i = BitAnd[p, 1]; p=floor(p/2);
+                       p = Which[
+                          i = 0,       p,             # closer to lower value
+                          y=1 || y==0, p+BitAnd[p,1], # tie goes to nearest even
+                          True,        p+1
+                         ]; # closer to upper value
+                       Mod[ If[ x<0
+                              , npat-p
+                              , p 
+                              ], npat ] # Simulate 2s complement
+               ]
+         ]
+}
+
+	method x2p( $x ) { # positable check is moot...
+		my $i;
+		my $p;
+		my $e = 2**($.es - 1);
+		my $y = abs( $x );
+
+		given $y {
+			when 0 { return 0 }
+			when Inf {
+				return 1 +< $.nbits - 1; # left is <<
+			}
+			default {
+				if $y >= 1 { # Northeast quadrant
+					$p = 1;
+					$i = 2; # Shift in 1s from the right and scale down
+					while $y >= $.useed and $i < $.nbits {
+						$p = 2 * $p + 1;
+						$y = $y / $.useed;
+						$i++;
+					}
+					$p *= 2;
+					$i++;
+				}
+				else { # Else, Southeast quadrant
+					$p = 0;
+					$i = 1; # Shift in 0s from the right and scale up
+					while $y < 1 and $i <= $.nbits {
+						$y *= $.useed;
+						$i++;
+					}
+					if $i >= $.nbits {
+						$p = 2;
+						$i = $.nbits + 1;
+					}
+					else {
+						$p = 1;
+						$i++;
+					}
+				}
+				# Extract exponent bits
+				while $e > 1/2 and $i <= $.nbits {
+					$p *= 2;
+					if $y >= 2**$e {
+						$y /= 2**$e;
+						$p++;
+					}
+					$e /= 2;
+					$i++;
+				}
+				$y--; # Fraction bits; subtract the hidden bit
+				while $y > 0 and $i <= $.nbits {
+					$y *= 2;
+					$p = 2 * $p + floor( $y );
+					$y -= floor( $y );
+					$i++;
+				}
+				$p *= 2**($.nbits+1-$i);
+				$i++;
+				# round to nearest; tie goes to even
+				$i = $p & 1; # bitand
+				$p = floor( $p / 2 );
+				if $i == 0 {
+					#$p = $p; # closer to lower value
+				}
+				elsif $y == 1 || 0 {
+					$p += ( $p & 1 ); # tie goes to nearest even
+				}
+				else {
+					$p = $p + 1;
+				}
+				return ( $x < 0 ?? $.npat - $p !! $p )
+					mod $.npat;
 			}
 		}
 	}

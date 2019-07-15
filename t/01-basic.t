@@ -63,10 +63,10 @@ subtest 'fraction', {
 	is $env.parts( 0b00110_0 )<fraction>, '0';
 }
 
-#`{
 subtest 'x value', {
 	my $env = Real::Unum::Environment.new( :nbits( 6 ), :es( 2 ) );
 
+#`{
 	is-deeply $env.p2x( 0b100_000 ), Inf;
 	is-deeply $env.p2x( 0b100_001 ), -65536;
 	is-deeply $env.p2x( 0b100_010 ), -4096;
@@ -99,7 +99,9 @@ subtest 'x value', {
 	is-deeply $env.p2x( 0b111_101 ), -1/1024;
 	is-deeply $env.p2x( 0b111_110 ), -1/4096;
 	is-deeply $env.p2x( 0b111_111 ), -1/65536;
+}
 
+#`{
 	is-deeply $env.p2x( 0b000_000 ), 0;
 	is-deeply $env.p2x( 0b000_001 ), 1/65536;
 	is-deeply $env.p2x( 0b000_010 ), 1/4096;
@@ -132,8 +134,8 @@ subtest 'x value', {
 	is-deeply $env.p2x( 0b011_101 ), 1024;
 	is-deeply $env.p2x( 0b011_110 ), 4096;
 	is-deeply $env.p2x( 0b011_111 ), 65536;
-};
 }
+};
 
 subtest 'display value', {
 	my $env = Real::Unum::Environment.new( :nbits( 6 ), :es( 2 ) );
