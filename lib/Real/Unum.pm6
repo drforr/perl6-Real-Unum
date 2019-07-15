@@ -35,6 +35,17 @@ class Real::Unum::Environment {
 		0 <= $p <= $.npat;
 	}
 
+	# Debug a posit
+	#
+	method debug( Int $p ) {
+		my %parts = self.parts( $p );
+		my Str $base-two = $p.base(2);
+		my Str $padding = '0' x ( $.nbits - $base-two.chars );
+		$base-two = $padding ~ $base-two;
+		my $v = self.regimevalue( %parts<regime> );
+		say "p[$base-two] sign [%parts<sign>] regime [%parts<regime>] exponent [%parts<exponent>] float [{%parts<float>//''}] (regimevalue [$v])";
+	}
+
 #`{
 
 	In principle, the Mathematica description of the way Posit internals
@@ -124,11 +135,27 @@ class Real::Unum::Environment {
 			default {
 				my ( $s, $k, $e, $f );
 				my %parts = self.parts( $p );
+
 				$s = %parts<sign>;
+
 				$k = self.regimevalue( %parts<regime> );
-				$e = %parts<exponent> ?? %parts<exponent>.parse-base(10) !! 0;
-				$f = %parts<fraction> ?? +(%parts<fraction>).parse-base(10) !! 1;
-#warn "p[$p] s[$s] regimebits[{%parts<regime>}] k[$k] e[$e] f[$f]\n";
+
+				$e = %parts<exponent>;
+				if $e {
+					if $e.chars < $.es {
+						$e ~= '0' x $.es - $e.chars;
+					}
+				}
+				else {
+					$e = '0';
+				}
+				$e = $e.parse-base(2);
+
+				$f = ( %parts<fraction> and
+				       %parts<fraction> ~~ /1/ )
+					 ?? +(%parts<fraction>).parse-base(2)
+					 !! 1;
+say "s[$s] k[$k] e[$e] f[$f]";
 
 				return (-1)**$s * $.useed**$k * 2**$e * $f;
 			}

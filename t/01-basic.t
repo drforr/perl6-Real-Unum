@@ -66,10 +66,10 @@ subtest 'fraction', {
 subtest 'x value', {
 	my $env = Real::Unum::Environment.new( :nbits( 6 ), :es( 2 ) );
 
+#`{
 	is-deeply $env.p2x( 0b100_000 ), Inf;
 	is-deeply $env.p2x( 0b100_001 ), -65536;
 	is-deeply $env.p2x( 0b100_010 ), -4096;
-#`{
 	is-deeply $env.p2x( 0b100_011 ), -1024;
 	is-deeply $env.p2x( 0b100_100 ), -256;
 	is-deeply $env.p2x( 0b100_101 ), -128;
@@ -97,20 +97,20 @@ subtest 'x value', {
 	is-deeply $env.p2x( 0b111_011 ), -1/128;
 	is-deeply $env.p2x( 0b111_100 ), -1/256;
 	is-deeply $env.p2x( 0b111_101 ), -1/1024;
-}
 	is-deeply $env.p2x( 0b111_110 ), -1/4096;
 	is-deeply $env.p2x( 0b111_111 ), -1/65536;
+}
 
 	is-deeply $env.p2x( 0b000_000 ), 0;
 	is-deeply $env.p2x( 0b000_001 ), 1/65536;
 	is-deeply $env.p2x( 0b000_010 ), 1/4096;
-#`{
 	is-deeply $env.p2x( 0b000_011 ), 1/1024;
 	is-deeply $env.p2x( 0b000_100 ), 1/256;
 	is-deeply $env.p2x( 0b000_101 ), 1/128;
 	is-deeply $env.p2x( 0b000_110 ), 1/64;
 	is-deeply $env.p2x( 0b000_111 ), 1/32;
 	is-deeply $env.p2x( 0b001_000 ), 1/16;
+#`{
 	is-deeply $env.p2x( 0b001_001 ), 3/32;
 	is-deeply $env.p2x( 0b001_010 ), 1/8;
 	is-deeply $env.p2x( 0b001_011 ), 3/16;
@@ -126,17 +126,16 @@ subtest 'x value', {
 	is-deeply $env.p2x( 0b010_101 ), 6;
 	is-deeply $env.p2x( 0b010_110 ), 8;
 	is-deeply $env.p2x( 0b010_111 ), 12;
+}
 	is-deeply $env.p2x( 0b011_000 ), 16;
 	is-deeply $env.p2x( 0b011_001 ), 32;
 	is-deeply $env.p2x( 0b011_010 ), 64;
 	is-deeply $env.p2x( 0b011_011 ), 128;
 	is-deeply $env.p2x( 0b011_100 ), 256;
 	is-deeply $env.p2x( 0b011_101 ), 1024;
-}
 	is-deeply $env.p2x( 0b011_110 ), 4096;
 	is-deeply $env.p2x( 0b011_111 ), 65536;
 };
-die "#### replace me\n";
 
 subtest 'display value', {
 	my $env = Real::Unum::Environment.new( :nbits( 6 ), :es( 2 ) );
