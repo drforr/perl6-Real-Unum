@@ -66,7 +66,6 @@ subtest 'fraction', {
 subtest 'x value', {
 	my $env = Real::Unum::Environment.new( :nbits( 6 ), :es( 2 ) );
 
-#`{
 	is-deeply $env.p2x( 0b100_000 ), Inf;
 	is-deeply $env.p2x( 0b100_001 ), -65536;
 	is-deeply $env.p2x( 0b100_010 ), -4096;
@@ -76,11 +75,11 @@ subtest 'x value', {
 	is-deeply $env.p2x( 0b100_110 ), -64;
 	is-deeply $env.p2x( 0b100_111 ), -32;
 	is-deeply $env.p2x( 0b101_000 ), -16;
-	is-deeply $env.p2x( 0b101_001 ), -12;
+	is-deeply Int($env.p2x( 0b101_001 )), -12;
 	is-deeply $env.p2x( 0b101_010 ), -8;
-	is-deeply $env.p2x( 0b101_011 ), -6;
+	is-deeply Int($env.p2x( 0b101_011 )), -6;
 	is-deeply $env.p2x( 0b101_100 ), -4;
-	is-deeply $env.p2x( 0b101_101 ), -3;
+	is-deeply Int($env.p2x( 0b101_101 )), -3;
 	is-deeply $env.p2x( 0b101_110 ), -2;
 	is-deeply $env.p2x( 0b101_111 ), -3/2;
 	is-deeply $env.p2x( 0b110_000 ), -1;
@@ -99,7 +98,6 @@ subtest 'x value', {
 	is-deeply $env.p2x( 0b111_101 ), -1/1024;
 	is-deeply $env.p2x( 0b111_110 ), -1/4096;
 	is-deeply $env.p2x( 0b111_111 ), -1/65536;
-}
 
 	is-deeply $env.p2x( 0b000_000 ), 0;
 	is-deeply $env.p2x( 0b000_001 ), 1/65536;
@@ -110,7 +108,6 @@ subtest 'x value', {
 	is-deeply $env.p2x( 0b000_110 ), 1/64;
 	is-deeply $env.p2x( 0b000_111 ), 1/32;
 	is-deeply $env.p2x( 0b001_000 ), 1/16;
-#`{
 	is-deeply $env.p2x( 0b001_001 ), 3/32;
 	is-deeply $env.p2x( 0b001_010 ), 1/8;
 	is-deeply $env.p2x( 0b001_011 ), 3/16;
@@ -118,15 +115,14 @@ subtest 'x value', {
 	is-deeply $env.p2x( 0b001_101 ), 3/8;
 	is-deeply $env.p2x( 0b001_110 ), 1/2;
 	is-deeply $env.p2x( 0b001_111 ), 3/4;
-	is-deeply $env.p2x( 0b010_000 ), 1;
+	is-deeply Int($env.p2x( 0b010_000 )), 1;
 	is-deeply $env.p2x( 0b010_001 ), 3/2;
 	is-deeply $env.p2x( 0b010_010 ), 2;
-	is-deeply $env.p2x( 0b010_011 ), 3;
+	is-deeply Int($env.p2x( 0b010_011 )), 3;
 	is-deeply $env.p2x( 0b010_100 ), 4;
-	is-deeply $env.p2x( 0b010_101 ), 6;
+	is-deeply Int($env.p2x( 0b010_101 )), 6;
 	is-deeply $env.p2x( 0b010_110 ), 8;
-	is-deeply $env.p2x( 0b010_111 ), 12;
-}
+	is-deeply Int($env.p2x( 0b010_111 )), 12;
 	is-deeply $env.p2x( 0b011_000 ), 16;
 	is-deeply $env.p2x( 0b011_001 ), 32;
 	is-deeply $env.p2x( 0b011_010 ), 64;

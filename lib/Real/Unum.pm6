@@ -153,9 +153,9 @@ class Real::Unum::Environment {
 
 				$f = ( %parts<fraction> and
 				       %parts<fraction> ~~ /1/ )
-					 ?? +(%parts<fraction>).parse-base(2)
+					 ?? 1+(%parts<fraction>).parse-base(2)*2**(-%parts<fraction>.chars)
 					 !! 1;
-say "s[$s] k[$k] e[$e] f[$f]";
+#say "s[$s] k[$k] e[$e] f[$f]";
 
 				return (-1)**$s * $.useed**$k * 2**$e * $f;
 			}
