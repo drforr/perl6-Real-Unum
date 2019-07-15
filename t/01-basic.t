@@ -115,7 +115,7 @@ subtest 'x value', {
 	is-deeply $env.p2x( 0b001_101 ), 3/8;
 	is-deeply $env.p2x( 0b001_110 ), 1/2;
 	is-deeply $env.p2x( 0b001_111 ), 3/4;
-	is-deeply Int($env.p2x( 0b010_000 )), 1;
+	is-deeply $env.p2x( 0b010_000 ), 1;
 	is-deeply $env.p2x( 0b010_001 ), 3/2;
 	is-deeply $env.p2x( 0b010_010 ), 2;
 	is-deeply Int($env.p2x( 0b010_011 )), 3;
@@ -131,6 +131,77 @@ subtest 'x value', {
 	is-deeply $env.p2x( 0b011_101 ), 1024;
 	is-deeply $env.p2x( 0b011_110 ), 4096;
 	is-deeply $env.p2x( 0b011_111 ), 65536;
+};
+
+subtest 'x2p(x)', {
+	my $env = Real::Unum::Environment.new( :nbits( 6 ), :es( 2 ) );
+
+	is-deeply $env.x2p( Inf      ), 0b100_000;
+	is-deeply $env.x2p( -65536   ), 0b100_001;
+	is-deeply $env.x2p( -4096    ), 0b100_010;
+	is-deeply $env.x2p( -1024    ), 0b100_011;
+	is-deeply $env.x2p( -256     ), 0b100_100;
+	is-deeply $env.x2p( -128     ), 0b100_101;
+	is-deeply $env.x2p( -64      ), 0b100_110;
+	is-deeply $env.x2p( -32      ), 0b100_111;
+	is-deeply $env.x2p( -16      ), 0b101_000;
+	is-deeply $env.x2p( -12      ), 0b101_001;
+	is-deeply $env.x2p( -8       ), 0b101_010;
+	is-deeply $env.x2p( -6       ), 0b101_011;
+	is-deeply $env.x2p( -4       ), 0b101_100;
+	is-deeply $env.x2p( -3       ), 0b101_101;
+	is-deeply $env.x2p( -2       ), 0b101_110;
+	is-deeply $env.x2p( -3/2     ), 0b101_111;
+	is-deeply $env.x2p( -1       ), 0b110_000;
+	is-deeply $env.x2p( -3/4     ), 0b110_001;
+	is-deeply $env.x2p( -1/2     ), 0b110_010;
+	is-deeply $env.x2p( -3/8     ), 0b110_011;
+	is-deeply $env.x2p( -1/4     ), 0b110_100;
+	is-deeply $env.x2p( -3/16    ), 0b110_101;
+	is-deeply $env.x2p( -1/8     ), 0b110_110;
+	is-deeply $env.x2p( -3/32    ), 0b110_111;
+	is-deeply $env.x2p( -1/16    ), 0b111_000;
+	is-deeply $env.x2p( -1/32    ), 0b111_001;
+	is-deeply $env.x2p( -1/64    ), 0b111_010;
+	is-deeply $env.x2p( -1/128   ), 0b111_011;
+	is-deeply $env.x2p( -1/256   ), 0b111_100;
+	is-deeply $env.x2p( -1/1024  ), 0b111_101;
+	is-deeply $env.x2p( -1/4096  ), 0b111_110;
+	is-deeply $env.x2p( -1/65536 ), 0b111_111;
+
+	is-deeply $env.x2p( 0       ), 0b000_000;
+	is-deeply $env.x2p( 1/65536 ), 0b000_001;
+	is-deeply $env.x2p( 1/4096  ), 0b000_010;
+	is-deeply $env.x2p( 1/1024  ), 0b000_011;
+	is-deeply $env.x2p( 1/256   ), 0b000_100;
+	is-deeply $env.x2p( 1/128   ), 0b000_101;
+	is-deeply $env.x2p( 1/64    ), 0b000_110;
+	is-deeply $env.x2p( 1/32    ), 0b000_111;
+	is-deeply $env.x2p( 1/16    ), 0b001_000;
+	is-deeply $env.x2p( 3/32    ), 0b001_001;
+	is-deeply $env.x2p( 1/8     ), 0b001_010;
+	is-deeply $env.x2p( 3/16    ), 0b001_011;
+	is-deeply $env.x2p( 1/4     ), 0b001_100;
+	is-deeply $env.x2p( 3/8     ), 0b001_101;
+	is-deeply $env.x2p( 1/2     ), 0b001_110;
+	is-deeply $env.x2p( 3/4     ), 0b001_111;
+	is-deeply $env.x2p( 1       ), 0b010_000;
+	is-deeply $env.x2p( 3/2     ), 0b010_001;
+	is-deeply $env.x2p( 2       ), 0b010_010;
+	is-deeply $env.x2p( 3       ), 0b010_011;
+	is-deeply $env.x2p( 4       ), 0b010_100;
+	is-deeply $env.x2p( 6       ), 0b010_101;
+	is-deeply $env.x2p( 8       ), 0b010_110;
+	is-deeply $env.x2p( 12      ), 0b010_111;
+	is-deeply $env.x2p( 16      ), 0b011_000;
+	is-deeply $env.x2p( 32      ), 0b011_001;
+	is-deeply $env.x2p( 64      ), 0b011_010;
+	is-deeply $env.x2p( 128     ), 0b011_011;
+	is-deeply $env.x2p( 256     ), 0b011_100;
+	is-deeply $env.x2p( 1024    ), 0b011_101;
+	is-deeply $env.x2p( 4096    ), 0b011_110;
+	is-deeply $env.x2p( 65536   ), 0b011_111;
+
 };
 
 subtest 'display value', {
